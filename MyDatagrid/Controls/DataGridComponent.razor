@@ -1,0 +1,67 @@
+﻿@typeparam TItem
+<table class="table is-fullwidth">
+    <thead>
+        <tr>
+            @if (Columns == null || Columns.Count <= 0)
+            {
+                //Create the header with reflection
+            }
+            else
+            {
+                //Create the header based on column definition
+                @foreach (var column in Columns)
+                {
+                    <th style="text-align:@column.Alignment.ToString().ToLower()">@column.Caption</th>
+                }
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @if (DataItems != null)
+        {
+            @foreach (var item in DataItems)
+            {
+                <tr>
+                    @if (Columns != null)
+                    {
+                        @foreach (var column in Columns)
+                        {
+                           // <td>@typeof(TItem).GetProperty(column.Datafield).GetValue(item)</td>
+                            var itemtype = typeof(TItem);//to get passed data type to tItem (employee)
+                            var columndatafield = column.Datafield??"nothing";//to get column name from TItem 
+                            
+                            var datafield = itemtype.GetProperty(columndatafield);//to get data type of specified column 
+                            @if(datafield!=null)
+                            {
+                                var datavalue = datafield!.GetValue(item);
+                                if (column.DataType == DataType.DateTime)
+                                {
+                                     datavalue = DateTime.Parse( datafield!.GetValue(item).ToString()).ToString(column.Format);
+                                }
+                                else if (column.DataType == DataType.Boolean)
+                                {
+                                     datavalue =bool.Parse( datafield!.GetValue(item).ToString()).ToString();
+                                }
+                                else if (column.DataType == DataType.Currency)
+                                {
+                                     datavalue =Math.Round(double.Parse( datafield!.GetValue(item).ToString()),2).ToString(column.Format);
+                                }
+                                
+                                <td align="@column.Alignment.ToString().ToLower()">@datavalue</td>
+                            }
+                            else{<td style="">nothing</td>}
+                        }
+                    }
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+@code {
+    [Parameter]
+    public List<TItem>? DataItems { get; set; } 
+    [Parameter]
+    public List<ColumnDefinition>? Columns { get; set; }
+
+
+}
