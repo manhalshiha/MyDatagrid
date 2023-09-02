@@ -8,7 +8,11 @@ Welcome to your new app.
 <br />
 <br />
 
-<DataGridComponent TItem="Employee" Columns="columnDefinition" DataItems="listEmployees">
+<DataGridComponent TItem="Employee" Columns="columnDefinition" DataItems="listEmployees" Paging="@(new PagingConfig{
+Enabled=true,
+CustomPager=false,
+PageSize=3
+  })">
 
 </DataGridComponent>
 @code{

@@ -19,7 +19,7 @@
     <tbody>
         @if (DataItems != null)
         {
-            @foreach (var item in DataItems)
+            @foreach (var item in DataItems.Skip(Paging.NumOfItemsToSkip(CurrentPageNumber)).Take(Paging.NumOfItemsToTake(DataItems.Count)))
             {
                 <tr>
                     @if (Columns != null)
@@ -57,11 +57,45 @@
         }
     </tbody>
 </table>
+<div class="level">
+    <div class="level-left"></div>
+    <div class="level-right">
+        <div class="level-item">
+            @if (Paging != null && Paging.Enabled)
+            {
+                @if (Paging.CustomPager)
+                {
+                    @CustomPager
+                }
+                else
+                {
+                    <button class="button" @onclick="GoToPrevPage">Previous</button>
+                    <button class="button" @onclick="GoToNextPage">Next</button>
+                }
+            }
+        </div>
+    </div>
+</div>
 @code {
     [Parameter]
     public List<TItem>? DataItems { get; set; } 
     [Parameter]
     public List<ColumnDefinition>? Columns { get; set; }
-
+    [Parameter]
+    public PagingConfig? Paging { get; set; } 
+    [Parameter]
+    public int CurrentPageNumber { get; set; } = 0;
+    [Parameter]
+    public RenderFragment? CustomPager { get; set; }
+    public void GoToPrevPage()
+    {
+        @if(Paging is not null)
+        CurrentPageNumber = Paging.PrevPageNumber(CurrentPageNumber);
+    }
+    public void GoToNextPage()
+    {
+        @if(Paging!=null && DataItems!=null)
+        CurrentPageNumber = Paging.NextPageNumber(CurrentPageNumber,DataItems.Count);
+    }
 
 }

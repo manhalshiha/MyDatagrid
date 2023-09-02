@@ -4,6 +4,7 @@
     {
         public bool Enabled { get; set; }
         public int PageSize { get; set; }
+        public bool CustomPager { get; set; }
 
         public int NumOfItemsToSkip(int pageNumber)
         {
