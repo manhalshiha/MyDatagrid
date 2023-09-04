@@ -8,19 +8,28 @@ Welcome to your new app.
 <br />
 <br />
 
-<DataGridComponent TItem="Employee" Columns="columnDefinition" DataItems="listEmployees" Paging="@(new PagingConfig{
+<DataGridComponent @ref="Grid" TItem="Employee" Columns="columnDefinition" DataItems="listEmployees" Paging="@(new PagingConfig{
 Enabled=true,
-CustomPager=false,
+CustomPager=true,
 PageSize=3
   })">
+    <CustomPager>
+        <button class="btn btn-primary" @onclick="GoToPrev">Previous</button>
+        <span style="font-size:12px; color:gray">
+            &nbsp;&nbsp;<b>Page</b>
+            <input type="number" min="1" max="@Grid.MaxPageNumber" @bind-value="Grid.CurrentPageNumber" />of @Grid.MaxPageNumber &nbsp;&nbsp;
+        </span>
+        <button class="btn btn-primary" @onclick="GoToNext">Next</button>
+    </CustomPager>
 
 </DataGridComponent>
-@code{
+@code {
     protected override void OnInitialized()
     {
         base.OnInitialized();
         Initilize();
     }
+    public DataGridComponent<Employee> Grid;
     private List<Employee>? listEmployees;
     private List<ColumnDefinition>? columnDefinition;
     public class Employee
@@ -32,17 +41,25 @@ PageSize=3
         public DateTime EmploymentDate { get; set; }
 
     }
+    private void GoToPrev()
+    {
+        Grid.GoToPrevPage();
+    }
+    private void GoToNext()
+    {
+        Grid.GoToNextPage();
+    }
     private void Initilize()
     {
         if (columnDefinition == null)
         {
-            columnDefinition = new() ;
+            columnDefinition = new();
             columnDefinition.AddRange(new ColumnDefinition[]
             {
                 new ColumnDefinition{Datafield="Name",Caption="Name"},
                 new ColumnDefinition{Datafield="Title",Caption="Title"},
                 new ColumnDefinition{Datafield="Department",Caption="Department"},
-                new ColumnDefinition{Datafield="EmploymentDate",Caption="Employment Date",Format="YYYY-MM-DD",DataType=DataType.DateTime},
+                new ColumnDefinition{Datafield="EmploymentDate",Caption="Employment Date",Format="dd-MM-yyyy",DataType=DataType.DateTime},
                 new ColumnDefinition{Datafield="Salary",Caption="Annula Salary",DataType=DataType.Currency,Alignment=Alignment.Right,Format="c"},
             });
 
@@ -62,7 +79,7 @@ PageSize=3
                 new Employee{Name="John Doe",Title="QA",Department="QA",EmploymentDate=DateTime.Now,Salary=100002},
                 new Employee{Name="Tim Smith",Title="DBA",Department="IT",EmploymentDate=DateTime.Now,Salary=100001},
                 new Employee{Name="Faye Mehai",Title="Developer",Department="Software Dev",EmploymentDate=DateTime.Now,Salary=100000},
-                
+
             });
         }
     }

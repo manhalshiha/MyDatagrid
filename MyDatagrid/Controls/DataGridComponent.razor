@@ -22,34 +22,39 @@
             @foreach (var item in DataItems.Skip(Paging.NumOfItemsToSkip(CurrentPageNumber)).Take(Paging.NumOfItemsToTake(DataItems.Count)))
             {
                 <tr>
-                    @if (Columns != null)
+                    @if (Columns != null && item != null)
                     {
                         @foreach (var column in Columns)
                         {
-                           // <td>@typeof(TItem).GetProperty(column.Datafield).GetValue(item)</td>
+                            // <td>@typeof(TItem).GetProperty(column.Datafield).GetValue(item)</td>
                             var itemtype = typeof(TItem);//to get passed data type to tItem (employee)
-                            var columndatafield = column.Datafield??"nothing";//to get column name from TItem 
-                            
-                            var datafield = itemtype.GetProperty(columndatafield);//to get data type of specified column 
-                            @if(datafield!=null)
+                            var columndatafield = column.Datafield ?? "nothing";//to get column name from TItem
+
+                            var datafield = itemtype.GetProperty(columndatafield);//to get data type of specified column
+                            @if (datafield != null)
                             {
-                                var datavalue = datafield!.GetValue(item);
-                                if (column.DataType == DataType.DateTime)
+                                var datavalue = datafield.GetValue(item);
+                                if (datavalue != null)
                                 {
-                                     datavalue = DateTime.Parse( datafield!.GetValue(item).ToString()).ToString(column.Format);
+                                    if (column.DataType == DataType.DateTime)
+                                    {
+                                        datavalue = DateTime.Parse(datavalue.ToString()??"").ToString(column.Format);
+                                    }
+                                    else if (column.DataType == DataType.Boolean)
+                                    {
+                                        datavalue = bool.Parse(datavalue.ToString()??"").ToString();
+                                    }
+                                    else if (column.DataType == DataType.Currency)
+                                    {
+                                        datavalue = Math.Round(double.Parse(datavalue.ToString()??""), 2).ToString(column.Format);
+                                    }
                                 }
-                                else if (column.DataType == DataType.Boolean)
-                                {
-                                     datavalue =bool.Parse( datafield!.GetValue(item).ToString()).ToString();
-                                }
-                                else if (column.DataType == DataType.Currency)
-                                {
-                                     datavalue =Math.Round(double.Parse( datafield!.GetValue(item).ToString()),2).ToString(column.Format);
-                                }
-                                
                                 <td align="@column.Alignment.ToString().ToLower()">@datavalue</td>
                             }
-                            else{<td style="">nothing</td>}
+                            else
+                            {
+                                <td style="">nothing</td>
+                            }
                         }
                     }
                 </tr>
@@ -69,8 +74,13 @@
                 }
                 else
                 {
-                    <button class="button" @onclick="GoToPrevPage">Previous</button>
-                    <button class="button" @onclick="GoToNextPage">Next</button>
+                    <span style="font-size:14px;cursor:pointer;" @onclick="GoToPrevPage"> <b>&lt Previous</b></span>
+                    
+                    @if(DataItems!=null)
+                    {
+                        <span style="font-size:12px; color:gray; cursor:pointer;">&nbsp;&nbsp; Page @CurrentPageNumber of @Paging.MaxPageNumber(DataItems.Count)&nbsp;&nbsp;</span>
+                    }
+                    <span style="font-size:14px;cursor:pointer;" @onclick="GoToNextPage"><b>Next &gt</b></span>
                 }
             }
         </div>
@@ -78,24 +88,25 @@
 </div>
 @code {
     [Parameter]
-    public List<TItem>? DataItems { get; set; } 
+    public List<TItem> DataItems { get; set; } 
     [Parameter]
-    public List<ColumnDefinition>? Columns { get; set; }
+    public List<ColumnDefinition> Columns { get; set; } = new();
     [Parameter]
-    public PagingConfig? Paging { get; set; } 
+    public PagingConfig Paging { get; set; } = new();
     [Parameter]
-    public int CurrentPageNumber { get; set; } = 0;
+    public int CurrentPageNumber { get; set; } = 1;
     [Parameter]
     public RenderFragment? CustomPager { get; set; }
     public void GoToPrevPage()
     {
-        @if(Paging is not null)
-        CurrentPageNumber = Paging.PrevPageNumber(CurrentPageNumber);
+        @if (Paging is not null)
+            CurrentPageNumber = Paging.PrevPageNumber(CurrentPageNumber);
     }
     public void GoToNextPage()
     {
-        @if(Paging!=null && DataItems!=null)
-        CurrentPageNumber = Paging.NextPageNumber(CurrentPageNumber,DataItems.Count);
+        @if (Paging != null && DataItems != null)
+            CurrentPageNumber = Paging.NextPageNumber(CurrentPageNumber, DataItems.Count);
     }
+    public int MaxPageNumber { get => Paging.MaxPageNumber(DataItems.Count); }
 
 }
