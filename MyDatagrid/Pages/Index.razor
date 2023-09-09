@@ -11,7 +11,7 @@ Welcome to your new app.
 <DataGridComponent @ref="Grid" TItem="Employee" Columns="columnDefinition" DataItems="listEmployees" Paging="@(new PagingConfig{
 Enabled=true,
 CustomPager=true,
-PageSize=3
+PageSize=12
   })">
     <CustomPager>
         <button class="btn btn-primary" @onclick="GoToPrev">Previous</button>
@@ -41,6 +41,7 @@ PageSize=3
         public DateTime EmploymentDate { get; set; }
 
     }
+
     private void GoToPrev()
     {
         Grid.GoToPrevPage();
@@ -56,7 +57,7 @@ PageSize=3
             columnDefinition = new();
             columnDefinition.AddRange(new ColumnDefinition[]
             {
-                new ColumnDefinition{Datafield="Name",Caption="Name"},
+                new ColumnDefinition{Datafield="Name",Caption="Name",SortDirection=SortDirection.Asc},
                 new ColumnDefinition{Datafield="Title",Caption="Title"},
                 new ColumnDefinition{Datafield="Department",Caption="Department"},
                 new ColumnDefinition{Datafield="EmploymentDate",Caption="Employment Date",Format="dd-MM-yyyy",DataType=DataType.DateTime},

@@ -11,7 +11,7 @@
                 //Create the header based on column definition
                 @foreach (var column in Columns)
                 {
-                    <th style="text-align:@column.Alignment.ToString().ToLower()">@column.Caption</th>
+                    <th @onclick="@(()=>SortData(column))" style="cursor:pointer; text-align:@column.Alignment.ToString().ToLower()">@column.Caption<span style="float:right;" class="@(SortClass(column))"> </span></th>
                 }
             }
         </tr>
@@ -38,15 +38,15 @@
                                 {
                                     if (column.DataType == DataType.DateTime)
                                     {
-                                        datavalue = DateTime.Parse(datavalue.ToString()??"").ToString(column.Format);
+                                        datavalue = DateTime.Parse(datavalue.ToString() ?? "").ToString(column.Format);
                                     }
                                     else if (column.DataType == DataType.Boolean)
                                     {
-                                        datavalue = bool.Parse(datavalue.ToString()??"").ToString();
+                                        datavalue = bool.Parse(datavalue.ToString() ?? "").ToString();
                                     }
                                     else if (column.DataType == DataType.Currency)
                                     {
-                                        datavalue = Math.Round(double.Parse(datavalue.ToString()??""), 2).ToString(column.Format);
+                                        datavalue = Math.Round(double.Parse(datavalue.ToString() ?? ""), 2).ToString(column.Format);
                                     }
                                 }
                                 <td align="@column.Alignment.ToString().ToLower()">@datavalue</td>
@@ -75,8 +75,8 @@
                 else
                 {
                     <span style="font-size:14px;cursor:pointer;" @onclick="GoToPrevPage"> <b>&lt Previous</b></span>
-                    
-                    @if(DataItems!=null)
+
+                    @if (DataItems != null)
                     {
                         <span style="font-size:12px; color:gray; cursor:pointer;">&nbsp;&nbsp; Page @CurrentPageNumber of @Paging.MaxPageNumber(DataItems.Count)&nbsp;&nbsp;</span>
                     }
@@ -88,7 +88,7 @@
 </div>
 @code {
     [Parameter]
-    public List<TItem> DataItems { get; set; } 
+    public List<TItem> DataItems { get; set; } = new();
     [Parameter]
     public List<ColumnDefinition> Columns { get; set; } = new();
     [Parameter]
@@ -108,5 +108,64 @@
             CurrentPageNumber = Paging.NextPageNumber(CurrentPageNumber, DataItems.Count);
     }
     public int MaxPageNumber { get => Paging.MaxPageNumber(DataItems.Count); }
-
+    public string SortClass(ColumnDefinition column)
+    {
+        if (column.SortDirection != SortDirection.NotSet)
+        {
+            return $"sort {column.SortDirection.ToString().ToLower()}";
+        }
+        return "no-sort";
+    }
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        SortData();
+    }
+    public void SortData(ColumnDefinition sortByColumn=null)
+    {
+        bool initial = (sortByColumn == null);
+        if (sortByColumn==null)
+        {
+            sortByColumn = Columns.FirstOrDefault(x => x.SortDirection != SortDirection.NotSet);
+            if (sortByColumn == null) return;
+        }
+        foreach (var column in Columns)
+        {
+            if (column.Datafield != sortByColumn.Datafield) column.SortDirection = SortDirection.NotSet;
+        }
+        if(!initial)
+        switch (sortByColumn.SortDirection)
+        {
+            case SortDirection.NotSet:
+                {
+                    sortByColumn.SortDirection = SortDirection.Asc;
+                    break;
+                }
+            case SortDirection.Asc:
+                {
+                    sortByColumn.SortDirection = SortDirection.Desc;
+                    break;
+                }
+            case SortDirection.Desc:
+                {
+                    sortByColumn.SortDirection = SortDirection.Asc;
+                    break;
+                }
+            default:
+                {
+                    sortByColumn.SortDirection = SortDirection.Asc;
+                    break;
+                }
+        }
+        if (sortByColumn.SortDirection == SortDirection.Asc)
+        {
+            DataItems.Sort((x, y) => typeof(TItem).GetProperty(sortByColumn.Datafield).GetValue(x).ToString()
+            .CompareTo(typeof(TItem).GetProperty(sortByColumn.Datafield).GetValue(y).ToString()));
+        }
+        else
+        {
+            DataItems.Sort((x, y) => typeof(TItem).GetProperty(sortByColumn.Datafield).GetValue(y).ToString()
+            .CompareTo(typeof(TItem).GetProperty(sortByColumn.Datafield).GetValue(x).ToString()));
+        }
+    }
 }
